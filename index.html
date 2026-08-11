@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS ARCADE</title>
+    <style>
+        :root {
+            --bg-primary: #0d0d1a;
+            --bg-secondary: #141428;
+            --bg-card: #1a1a32;
+            --bg-input: #0d0d22;
+            --border-color: #2a2a5a;
+            --text-primary: #eee;
+            --text-secondary: #c8c8e8;
+            --text-muted: #888;
+            --accent: #ff6b9d;
+            --accent-hover: #ff8ab0;
+        }
+        [data-theme="light"] {
+            --bg-primary: #f0f0f5;
+            --bg-secondary: #ffffff;
+            --bg-card: #e8e8f0;
+            --bg-input: #ffffff;
+            --border-color: #c0c0d0;
+            --text-primary: #1a1a2e;
+            --text-secondary: #333355;
+            --text-muted: #666688;
+            --accent: #e94560;
+            --accent-hover: #ff6b8a;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-primary); color: var(--text-primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
+        #passwordScreen {
+            background: var(--bg-secondary);
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        #passwordScreen h1 { color: var(--accent); font-size: 32px; margin-bottom: 10px; letter-spacing: 2px; }
+        #passwordScreen p { color: var(--text-muted); margin-bottom: 25px; }
+        #passwordScreen input {
+            width: 100%; padding: 14px; border-radius: 12px;
+            border: 2px solid var(--border-color); background: var(--bg-input);
+            color: var(--text-primary); font-size: 16px; outline: none; margin-bottom: 14px;
+        }
+        #passwordScreen input:focus { border-color: var(--accent); }
+        #passwordScreen button {
+            width: 100%; padding: 14px; border: none; border-radius: 12px;
+            background: var(--accent); color: #000; font-weight: bold; font-size: 16px;
+            cursor: pointer; transition: 0.3s;
+        }
+        #passwordScreen button:hover { background: var(--accent-hover); }
+        #passwordScreen .error { color: #ff4444; font-size: 13px; margin-top: 10px; display: none; }
+        #passwordScreen .hint { color: var(--text-muted); font-size: 11px; margin-top: 18px; }
+        #privacyOverlay {
+            position: fixed; top:0; left:0; width:100vw; height:100vh;
+            background:#000; color:#fff; display:none;
+            justify-content:center; align-items:center; z-index:9999;
+            font-size:24px; font-weight:bold; letter-spacing:4px;
+            pointer-events:none;
+        }
+        #privacyOverlay.active { display:flex; }
+        #privacyOverlay span { color: var(--accent); }
+        #reportAlert {
+            position:fixed; top:0; left:0; width:100vw; height:100vh;
+            background:rgba(200,0,0,0.88);
+            display:none;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            z-index:10000;
+            color:#fff;
+            text-align:center;
+            padding:20px;
+            animation:flash 0.4s ease;
+        }
+        #reportAlert.active { display:flex; }
+        #reportAlert h2 { font-size:48px; margin-bottom:20px; text-shadow:0 0 20px #000; }
+        #reportAlert p { font-size:28px; margin-bottom:30px; max-width:600px; }
+        #reportAlert button { padding:14px 40px; border:none; border-radius:30px; background:#fff; color:#c00; font-weight:bold; font-size:18px; cursor:pointer; }
+        #reportAlert button:hover { background:#eee; }
+        @keyframes flash { 0%{opacity:0;transform:scale(0.9);}100%{opacity:1;transform:scale(1);} }
+    </style>
+</head>
+<body>
+    <div id="passwordScreen">
+        <h1>🔒 NEXUS ARCADE</h1>
+        <p>Enter the master key to access the arcade</p>
+        <input type="password" id="keyInput" placeholder="Enter key" autocomplete="off">
+        <button id="unlockBtn">Unlock</button>
+        <div class="error" id="errorMsg">Incorrect key</div>
+        <div class="hint">Hint: name of the founder</div>
+    </div>
+    <div id="privacyOverlay"><span>🔒</span> Screen Protected</div>
+    <div id="reportAlert">
+        <h2>⚠️ ALERT</h2>
+        <p id="reportMessage">Teacher nearby</p>
+        <button id="dismissReport">Dismiss</button>
+    </div>
+    <script>
+    (function() {
+        const KEY_MAIN = "Isaacism";
+        const KEY_DIESEL = "diesel";
+        const keyInput = document.getElementById('keyInput');
+        const unlockBtn = document.getElementById('unlockBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function unlock() {
+            const entered = keyInput.value.trim();
+            if (entered === KEY_MAIN) {
+                errorMsg.style.display = 'none';
+                const mainHTML = generateMainAppHTML();
+                const newWin = window.open('about:blank', '_blank');
+                if (!newWin) { alert('Popup blocked! Please allow popups for this site.'); return; }
+                newWin.document.write(mainHTML);
+                newWin.document.close();
+                window.location.replace('about:blank');
+            } else if (entered === KEY_DIESEL) {
+                window.location.href = 'https://rcps.info';
+                setTimeout(() => window.close(), 100);
+            } else {
+                errorMsg.style.display = 'block';
+                keyInput.value = '';
+                keyInput.focus();
+            }
+        }
+        unlockBtn.addEventListener('click', unlock);
+        keyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'i' || e.key === 'I')) e.preventDefault();
+            if (e.key === 'F12') e.preventDefault();
+        });
+
+        function generateMainAppHTML() {
+            // ---------- Data (games, social, school, etc.) ----------
+            const allItems = [
+                { name: '1v1.lol', slug: '1v1lol', tag: 'shooter' },
+                { name: 'Roblox', slug: 'roblox', tag: 'adventure' },
+                { name: 'Big Shot Boxing', slug: 'big-shot-boxing', tag: 'adventure' },
+                { name: 'Krunker', slug: 'krunker', tag: 'shooter' },
+                { name: 'Shell Shockers', slug: 'shell-shockers', tag: 'shooter' },
+                { name: 'Slither.io', slug: 'slither-io', tag: 'arcade' },
+                { name: 'Agar.io', slug: 'agar-io', tag: 'arcade' },
+                { name: 'Paper.io', slug: 'paper-io', tag: 'arcade' },
+                { name: 'Minecraft', slug: 'minecraft', tag: 'adventure' },
+                { name: 'Fortnite', slug: 'fortnite', tag: 'shooter' },
+                { name: 'GTA', slug: 'gta', tag: 'adventure' },
+                { name: 'Among Us', slug: 'among-us', tag: 'adventure' },
+                { name: 'Fall Guys', slug: 'fall-guys', tag: 'arcade' },
+                { name: 'Brawl Stars', slug: 'brawl-stars', tag: 'shooter' },
+                { name: 'Clash of Clans', slug: 'clash-of-clans', tag: 'strategy' },
+                { name: 'Clash Royale', slug: 'clash-royale', tag: 'strategy' },
+                { name: 'Call of Duty', slug: 'call-of-duty', tag: 'shooter' },
+                { name: 'PUBG', slug: 'pubg', tag: 'shooter' },
+                { name: 'Free Fire', slug: 'free-fire', tag: 'shooter' },
+                { name: 'Subway Surfers', slug: 'subway-surfers', tag: 'arcade' },
+                { name: 'Temple Run', slug: 'temple-run', tag: 'arcade' },
+                { name: 'Crossy Road', slug: 'crossy-road', tag: 'arcade' },
+                { name: 'YouTube', slug: 'youtube', tag: 'social' },
+                { name: 'TikTok', slug: 'tiktok', tag: 'social' },
+                { name: 'Snapchat', slug: 'snapchat', tag: 'social' },
+                { name: 'Discord', slug: 'discord', tag: 'social' },
+                { name: 'Spotify', slug: 'spotify', tag: 'music' },
+                { name: 'Twitch', slug: 'twitch', tag: 'social' },
+                { name: 'Instagram', slug: 'instagram', tag: 'social' },
+                { name: 'Twitter', slug: 'twitter', tag: 'social' },
+                { name: 'Reddit', slug: 'reddit', tag: 'social' },
+                { name: 'Pinterest', slug: 'pinterest', tag: 'social' },
+                { name: 'CapCut', slug: 'capcut', tag: 'editing' },
+                { name: 'Blurrr', slug: 'blurr', tag: 'editing' },
+                { name: 'Alight Motion', slug: 'alight-motion', tag: 'editing' },
+                { name: 'Canvas', slug: null, tag: 'school', directUrl: 'https://canvas.instructure.com' },
+                { name: 'RCPS.info', slug: null, tag: 'school', directUrl: 'https://rcps.info' },
+                { name: 'Clever', slug: null, tag: 'school', directUrl: 'https://clever.com' },
+                { name: 'Google Classroom', slug: null, tag: 'school', directUrl: 'https://classroom.google.com' },
+                { name: 'Schoology', slug: null, tag: 'school', directUrl: 'https://schoology.com' },
+                { name: 'PowerSchool', slug: null, tag: 'school', directUrl: 'https://powerschool.com' },
+                { name: 'Geometry Dash', slug: 'geometry-dash', tag: 'arcade' },
+                { name: 'Doodle Jump', slug: 'doodle-jump', tag: 'arcade' },
+                { name: 'Candy Crush', slug: 'candy-crush', tag: 'arcade' },
+                { name: 'Pokémon', slug: 'pokemon', tag: 'adventure' },
+                { name: 'Mario', slug: 'mario', tag: 'adventure' },
+                { name: 'Sonic', slug: 'sonic', tag: 'adventure' },
+                { name: 'Mortal Kombat', slug: 'mortal-kombat', tag: 'shooter' },
+                { name: 'Street Fighter', slug: 'street-fighter', tag: 'shooter' },
+                { name: 'NBA 2K', slug: 'nba-2k', tag: 'sports' },
+                { name: 'FIFA', slug: 'fifa', tag: 'sports' },
+                { name: 'Madden', slug: 'madden', tag: 'sports' },
+            ];
+
+            const items = allItems.map(item => {
+                if (item.slug) {
+                    const url = `https://www.now.gg/play/${item.slug}`;
+                    const enc = btoa(url.split('').reverse().join(''));
+                    return { ...item, url: enc, domain: `${item.slug}.com` };
+                } else {
+                    const domain = new URL(item.directUrl).hostname;
+                    return { ...item, url: item.directUrl, domain: domain, direct: true };
+                }
+            });
+
+            const allTags = [...new Set(items.map(i => i.tag))];
+            let tagButtonsHTML = allTags.map(t => `<button class="tag-filter-btn" data-tag="${t}">${t}</button>`).join('');
+
+            // Build cards HTML with favorite button
+            let cardsHTML = '';
+            items.forEach(g => {
+                const logoUrl = `https://www.google.com/s2/favicons?domain=${g.domain}&sz=128`;
+                cardsHTML += `
+                    <div class="game-card" data-tag="${g.tag}" data-name="${g.name.toLowerCase()}" data-direct="${g.direct ? 'true' : 'false'}" data-game="${g.name}">
+                        <img class="logo" src="${logoUrl}" alt="${g.name}" onerror="this.style.display='none'">
+                        <div class="name">${g.name}</div>
+                        <div class="tag">${g.tag}</div>
+                        <div style="display:flex; gap:8px; width:100%; margin-top:4px;">
+                            <button class="play-btn" data-url="${g.url}" data-direct="${g.direct ? 'true' : 'false'}" data-name="${g.name}" style="flex:1;">▶ Play</button>
+                            <button class="fav-btn" data-game="${g.name}" style="background:none; border:none; font-size:22px; cursor:pointer; padding:0 8px;">☆</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // ---------- HTML ----------
+            return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>NEXUS ARCADE</title>
+                <style>
+                    /* (styles same as before plus new ones) */
+                    :root {
+                        --bg-primary: #0d0d1a;
+                        --bg-secondary: #141428;
+                        --bg-card: #1a1a32;
+                        --bg-input: #0d0d22;
+                        --border-color: #2a2a5a;
+                        --text-primary: #eee;
+                        --text-secondary: #c8c8e8;
+                        --text-muted: #888;
+                        --accent: #ff6b9d;
+                        --accent-hover: #ff8ab0;
+                    }
+                    [data-theme="light"] {
+                        --bg-primary: #f0f0f5;
+                        --bg-secondary: #ffffff;
+                        --bg-card: #e8e8f0;
+                        --bg-input: #ffffff;
+                        --border-color: #c0c0d0;
+                        --text-primary: #1a1a2e;
+                        --text-secondary: #333355;
+                        --text-muted: #666688;
+                        --accent: #e94560;
+                        --accent-hover: #ff6b8a;
+                    }
+                    * { margin:0; padding:0; box-sizing:border-box; }
+                    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-primary); color: var(--text-primary); padding: 20px; transition: background 0.3s, color 0.3s; }
+                    .app-container { max-width: 1400px; margin: 0 auto; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+                    .header h1 { color: var(--accent); font-size: 28px; }
+                    .header .right-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+                    .header .privacy-badge { font-size: 12px; color: var(--text-muted); background: var(--bg-card); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
+                    .header .icon-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; transition: 0.2s; padding: 0 4px; }
+                    .header .icon-btn:hover { color: var(--accent); transform: scale(1.1); }
+                    .tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 10px; }
+                    .tab-btn { padding: 8px 20px; border: none; border-radius: 20px; background: var(--bg-card); color: var(--text-muted); font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
+                    .tab-btn:hover { background: var(--border-color); color: var(--text-primary); }
+                    .tab-btn.active { background: var(--accent); color: #000; }
+                    .search-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 10px 0; }
+                    .search-bar input { flex: 1; padding: 10px 16px; border-radius: 20px; border: 2px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); font-size: 14px; outline: none; min-width: 150px; }
+                    .search-bar input:focus { border-color: var(--accent); }
+                    .search-bar .tag-filter { display: flex; flex-wrap: wrap; gap: 6px; }
+                    .search-bar .tag-filter button { padding: 4px 14px; border-radius: 12px; border: 1px solid var(--border-color); background: transparent; color: var(--text-muted); font-size: 11px; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
+                    .search-bar .tag-filter button.active { background: var(--accent); color: #000; border-color: var(--accent); }
+                    .search-bar .tag-filter button:hover { border-color: var(--accent); color: var(--text-primary); }
+                    .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px; margin-top: 10px; }
+                    .game-card { background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 16px; padding: 16px 12px 14px; text-align: center; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+                    .game-card:hover { transform: scale(1.03); border-color: var(--accent); }
+                    .game-card .logo { width: 64px; height: 64px; object-fit: contain; border-radius: 12px; background: var(--bg-primary); padding: 4px; }
+                    .game-card .name { font-weight: 600; font-size: 14px; color: var(--text-secondary); }
+                    .game-card .tag { font-size: 10px; text-transform: uppercase; background: var(--accent); color: #000; padding: 2px 10px; border-radius: 12px; font-weight: bold; letter-spacing: 0.5px; }
+                    .game-card .play-btn { padding: 8px 20px; border: none; border-radius: 20px; background: var(--accent); color: #000; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
+                    .game-card .play-btn:hover { background: var(--accent-hover); }
+                    .game-card .fav-btn { background: none; border: none; font-size: 22px; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
+                    .game-card .fav-btn.active { color: #ffd700; }
+                    .chat-container { display: none; flex-direction: column; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color); padding: 16px; max-height: 500px; min-height: 300px; margin-top: 10px; }
+                    .chat-container .chat-header { color: var(--accent); font-weight: bold; font-size: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display: flex; justify-content: space-between; }
+                    .chat-container #chatMessages { flex: 1; overflow-y: auto; background: var(--bg-primary); border-radius: 10px; padding: 10px; margin: 10px 0; min-height: 200px; max-height: 350px; display: flex; flex-direction: column; gap: 4px; }
+                    .chat-container .msg { background: var(--bg-input); padding: 5px 10px; border-radius: 8px; word-break: break-word; }
+                    .chat-container .msg .user { color: var(--accent); font-weight: bold; }
+                    .chat-container .msg .time { color: var(--text-muted); font-size: 10px; margin-left: 8px; }
+                    .chat-container .chat-input-row { display: flex; gap: 8px; }
+                    .chat-container .chat-input-row input { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); outline: none; }
+                    .chat-container .chat-input-row input:focus { border-color: var(--accent); }
+                    .chat-container .chat-input-row button { padding: 10px 18px; border: none; border-radius: 10px; background: var(--accent); color: #000; font-weight: bold; cursor: pointer; }
+                    .chat-container .chat-input-row button:hover { background: var(--accent-hover); }
+                    .footer { text-align: center; margin-top: 30px; color: var(--text-muted); font-size: 12px; }
+                    .hidden { display: none !important; }
+                    #privacyOverlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background:#000; color:#fff; display:none; justify-content:center; align-items:center; z-index:9999; font-size:24px; font-weight:bold; letter-spacing:4px; pointer-events:none; }
+                    #privacyOverlay.active { display:flex; }
+                    #privacyOverlay span { color: var(--accent); }
+                    #reportAlert { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(200,0,0,0.88); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:10000; color:#fff; text-align:center; padding:20px; animation:flash 0.4s ease; }
+                    #reportAlert.active { display:flex; }
+                    #reportAlert h2 { font-size:48px; margin-bottom:20px; text-shadow:0 0 20px #000; }
+                    #reportAlert p { font-size:28px; margin-bottom:30px; max-width:600px; }
+                    #reportAlert button { padding:14px 40px; border:none; border-radius:30px; background:#fff; color:#c00; font-weight:bold; font-size:18px; cursor:pointer; }
+                    #reportAlert button:hover { background:#eee; }
+                    @keyframes flash { 0%{opacity:0;transform:scale(0.9);}100%{opacity:1;transform:scale(1);} }
+                    .modal-overlay { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; z-index:10001; }
+                    .modal-overlay.active { display:flex; }
+                    .modal-box { background:var(--bg-secondary); border-radius:24px; padding:30px; max-width:500px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.8); border:1px solid var(--border-color); }
+                    .modal-box h2 { color:var(--accent); margin-bottom:20px; }
+                    .modal-box .setting-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-color); }
+                    .modal-box .setting-row:last-child { border-bottom:none; }
+                    .modal-box .setting-row label { font-weight:600; color:var(--text-secondary); }
+                    .modal-box .setting-row select, .modal-box .setting-row button { padding:6px 14px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary); cursor:pointer; }
+                    .modal-box .setting-row button { background:var(--accent); color:#000; border:none; font-weight:bold; }
+                    .modal-box .setting-row button:hover { background:var(--accent-hover); }
+                    .modal-box .close-modal { margin-top:20px; padding:10px 20px; border:none; border-radius:20px; background:var(--border-color); color:var(--text-primary); cursor:pointer; width:100%; font-size:14px; }
+                    .modal-box .close-modal:hover { background:var(--accent); color:#000; }
+                    /* Browser */
+                    .browser-container { display: none; flex-direction: column; height: 70vh; background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border-color); overflow: hidden; margin-top: 10px; }
+                    .browser-tabs { display: flex; background: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 4px 8px; overflow-x: auto; gap: 4px; flex-shrink: 0; }
+                    .browser-tab { display: flex; align-items: center; background: var(--bg-primary); border-radius: 8px 8px 0 0; padding: 6px 10px; gap: 6px; cursor: pointer; border: 1px solid var(--border-color); border-bottom: none; white-space: nowrap; min-width: 80px; max-width: 150px; }
+                    .browser-tab.active { background: var(--bg-secondary); border-bottom: 2px solid var(--accent); }
+                    .browser-tab .tab-title { font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+                    .browser-tab .tab-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 0 2px; }
+                    .browser-tab .tab-close:hover { color: var(--accent); }
+                    .browser-add-tab { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 0 8px; }
+                    .browser-add-tab:hover { color: var(--accent); }
+                    .browser-address-bar { display: flex; gap: 8px; padding: 8px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+                    .browser-address-bar input { flex: 1; padding: 8px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); outline: none; font-size: 14px; }
+                    .browser-address-bar input:focus { border-color: var(--accent); }
+                    .browser-address-bar button { padding: 8px 16px; border: none; border-radius: 20px; background: var(--accent); color: #000; font-weight: bold; cursor: pointer; }
+                    .browser-address-bar button:hover { background: var(--accent-hover); }
+                    .browser-favorites { display: flex; gap: 6px; padding: 4px 8px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; flex-shrink: 0; }
+                    .browser-favorites .fav-item { font-size: 12px; background: var(--bg-primary); padding: 2px 10px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer; }
+                    .browser-favorites .fav-item:hover { border-color: var(--accent); }
+                    .browser-iframe { flex: 1; background: #fff; border: none; width: 100%; }
+                    /* About */
+                    .about-container { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; min-height: 400px; }
+                    .about-container h2 { font-size: 3rem; color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 20px rgba(255,107,157,0.3); }
+                    .about-container .creator-name { font-size: 2.5rem; font-weight: bold; color: #fff; background: var(--bg-card); padding: 20px 40px; border-radius: 20px; border: 2px solid var(--accent); margin: 20px 0; display: inline-block; }
+                    .about-container .message { font-size: 1.5rem; color: var(--text-secondary); max-width: 600px; line-height: 1.6; border-left: 4px solid var(--accent); padding-left: 20px; margin-top: 20px; }
+                    .about-container .emoji-big { font-size: 4rem; margin-bottom: 10px; }
+                    .about-container .person-of-week { margin-top: 30px; font-size: 1.8rem; color: #ffd700; background: var(--bg-card); padding: 15px 30px; border-radius: 20px; border: 2px solid #ffd700; }
+                    .about-container .person-of-week span { color: var(--accent); font-weight: bold; }
+                    /* Profile & Community */
+                    .profile-container { display: none; flex-direction: column; gap: 20px; padding: 20px 0; }
+                    .profile-container .profile-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; }
+                    .profile-container .profile-card .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+                    .profile-container .profile-card .field label { font-weight: bold; color: var(--text-secondary); font-size: 14px; }
+                    .profile-container .profile-card .field input, .profile-container .profile-card .field textarea { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); outline: none; font-size: 14px; }
+                    .profile-container .profile-card .field input:focus, .profile-container .profile-card .field textarea:focus { border-color: var(--accent); }
+                    .profile-container .profile-card .field textarea { resize: vertical; min-height: 60px; }
+                    .profile-container .profile-card .profile-pic { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: var(--bg-primary); border: 2px solid var(--border-color); margin-bottom: 10px; }
+                    .profile-container .profile-card .profile-pic-wrapper { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+                    .profile-container .profile-card .upload-btn { padding: 6px 16px; border-radius: 20px; border: none; background: var(--accent); color: #000; font-weight: bold; cursor: pointer; }
+                    .profile-container .profile-card .upload-btn:hover { background: var(--accent-hover); }
+                    .profile-container .profile-card .save-btn { padding: 8px 24px; border: none; border-radius: 20px; background: var(--accent); color: #000; font-weight: bold; cursor: pointer; margin-top: 10px; }
+                    .profile-container .profile-card .save-btn:hover { background: var(--accent-hover); }
+                    .community-container { display: none; flex-direction: column; gap: 16px; padding: 20px 0; }
+                    .community-container .user-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+                    .community-container .user-card .user-info { display: flex; align-items: center; gap: 12px; }
+                    .community-container .user-card .user-info .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-primary); border: 2px solid var(--border-color); object-fit: cover; }
+                    .community-container .user-card .user-info .name { font-weight: bold; font-size: 16px; }
+                    .community-container .user-card .user-info .nick { color: var(--text-muted); font-size: 14px; }
+                    .community-container .user-card .votes { display: flex; align-items: center; gap: 8px; }
+                    .community-container .user-card .votes button { background: none; border: none; font-size: 24px; cursor: pointer; transition: 0.2s; }
+                    .community-container .user-card .votes button:hover { transform: scale(1.2); }
+                    .community-container .user-card .votes .up { color: #4caf50; }
+                    .community-container .user-card .votes .down { color: #f44336; }
+                    .community-container .user-card .votes .score { font-weight: bold; font-size: 18px; min-width: 30px; text-align: center; }
+                    @media (max-width:600px){ .tabs{ gap:4px; } .tab-btn{ font-size:12px; padding:6px 12px; } .about-container h2 { font-size: 2rem; } .about-container .creator-name { font-size: 1.5rem; padding: 12px 20px; } .about-container .message { font-size: 1.2rem; } .profile-container .profile-card .profile-pic-wrapper { flex-direction: column; align-items: flex-start; } }
+                </style>
+            </head>
+            <body>
+                <div id="privacyOverlay"><span>🔒</span> Screen Protected</div>
+                <div id="reportAlert">
+                    <h2>⚠️ ALERT</h2>
+                    <p id="reportMessage">Teacher nearby</p>
+                    <button id="dismissReport">Dismiss</button>
+                </div>
+                <div class="modal-overlay" id="settingsModal">
+                    <div class="modal-box">
+                        <h2>⚙️ Settings</h2>
+                        <div class="setting-row"><label>Theme</label><select id="themeSelect"><option value="dark">Dark</option><option value="light">Light</option></select></div>
+                        <div class="setting-row"><label>Clear Chat History</label><button id="clearChatBtn">Clear</button></div>
+                        <div class="setting-row"><label>Reset All Settings</label><button id="resetSettingsBtn">Reset</button></div>
+                        <button class="close-modal" id="closeSettings">Close</button>
+                    </div>
+                </div>
+                <div class="app-container">
+                    <div class="header">
+                        <h1>🎮 NEXUS ARCADE</h1>
+                        <div class="right-actions">
+                            <span class="privacy-badge">🛡️ Privacy ON</span>
+                            <button class="icon-btn" id="reportBtn" title="Report emergency">🚨</button>
+                            <button class="icon-btn" id="settingsBtn" title="Settings">⚙️</button>
+                        </div>
+                    </div>
+                    <div class="tabs" id="tabContainer">
+                        <button class="tab-btn active" data-tab="all">All</button>
+                        <button class="tab-btn" data-tab="games">Games</button>
+                        <button class="tab-btn" data-tab="social">Social</button>
+                        <button class="tab-btn" data-tab="editing">Editing</button>
+                        <button class="tab-btn" data-tab="school">School</button>
+                        <button class="tab-btn" data-tab="favorites">Favorites</button>
+                        <button class="tab-btn" data-tab="browser">Nexus Network</button>
+                        <button class="tab-btn" data-tab="chat">Chat</button>
+                        <button class="tab-btn" data-tab="profile">Profile</button>
+                        <button class="tab-btn" data-tab="community">Community</button>
+                        <button class="tab-btn" data-tab="about">About</button>
+                    </div>
+                    <div class="search-bar" id="searchBar">
+                        <input type="text" id="searchInput" placeholder="Search games/apps...">
+                        <div class="tag-filter" id="tagFilter">
+                            <button class="tag-filter-btn active" data-tag="all">all</button>
+                            ${tagButtonsHTML}
+                        </div>
+                    </div>
+                    <div id="gameGridContainer">
+                        <div class="game-grid" id="gameGrid">${cardsHTML}</div>
+                    </div>
+                    <div class="chat-container" id="chatContainer">
+                        <div class="chat-header">💬 Global Chat <span id="userCount">👤 0 online</span></div>
+                        <div id="chatMessages"></div>
+                        <div class="chat-input-row"><input type="text" id="chatInput" placeholder="Type message..."><button id="chatSend">Send</button></div>
+                        <div style="font-size:10px;color:var(--text-muted);margin-top:6px;text-align:center;">anonymous • local only</div>
+                    </div>
+                    <!-- Browser -->
+                    <div class="browser-container" id="browserContainer">
+                        <div class="browser-tabs" id="browserTabs"><button class="browser-add-tab" id="addBrowserTab">+</button></div>
+                        <div class="browser-address-bar"><input type="text" id="browserUrl" placeholder="Search or enter URL..."><button id="browserGo">Go</button><button id="browserFavStar" title="Add to favorites">⭐</button></div>
+                        <div class="browser-favorites" id="browserFavorites"></div>
+                        <iframe class="browser-iframe" id="browserIframe" src="about:blank"></iframe>
+                    </div>
+                    <!-- Profile -->
+                    <div class="profile-container" id="profileContainer">
+                        <div class="profile-card">
+                            <div class="profile-pic-wrapper">
+                                <img id="profilePicDisplay" class="profile-pic" src="" alt="Profile">
+                                <div>
+                                    <button class="upload-btn" id="uploadPicBtn">Upload Picture</button>
+                                    <input type="file" id="picFileInput" accept="image/*" style="display:none;">
+                                </div>
+                            </div>
+                            <div class="field"><label>Username (unique)</label><input type="text" id="profileUsername" placeholder="Username"></div>
+                            <div class="field"><label>Nickname (display name)</label><input type="text" id="profileNickname" placeholder="Nickname"></div>
+                            <div class="field"><label>Bio</label><textarea id="profileBio" placeholder="Tell us about yourself..."></textarea></div>
+                            <div class="field"><label>Your Weekly Votes: <span id="profileVotes">0</span></label></div>
+                            <button class="save-btn" id="saveProfileBtn">Save Profile</button>
+                        </div>
+                    </div>
+                    <!-- Community -->
+                    <div class="community-container" id="communityContainer">
+                        <!-- Will be populated by JS -->
+                    </div>
+                    <!-- About -->
+                    <div class="about-container" id="aboutContainer">
+                        <div class="emoji-big">👑</div>
+                        <h2>Made by</h2>
+                        <div class="creator-name">Isaac Diaz Del Cid</div>
+                        <div style="font-size:1.8rem; color:var(--accent); margin:10px 0;">your glorious king</div>
+                        <div class="message">"yo don’t rat me out<br>this is what I was working on all summer break"</div>
+                        <div class="person-of-week" id="personOfWeekDisplay">🏆 Person of the Week: <span id="potwName">None</span></div>
+                    </div>
+                    <div class="footer">All services via now.gg • Play in new tab</div>
+                </div>
+
+                <script>
+                (function() {
+                    // ------ Auto-crash key ------
+                    document.addEventListener('keydown', function(e) {
+                        if (e.shiftKey && e.key === 'Backspace') {
+                            e.preventDefault();
+                            window.close();
+                            setTimeout(function() { if (!window.closed) window.location.replace('about:blank'); }, 100);
+                        }
+                    });
+
+                    // ------ Data ------
+                    const items = ${JSON.stringify(items)};
+                    const allTags = ${JSON.stringify(allTags)};
+                    const gameNames = items.map(i => i.name);
+
+                    // ------ DOM refs ------
+                    const grid = document.getElementById('gameGrid');
+                    const searchInput = document.getElementById('searchInput');
+                    const tagFilter = document.getElementById('tagFilter');
+                    const tabBtns = document.querySelectorAll('.tab-btn');
+                    const chatContainer = document.getElementById('chatContainer');
+                    const gameGridContainer = document.getElementById('gameGridContainer');
+                    const browserContainer = document.getElementById('browserContainer');
+                    const aboutContainer = document.getElementById('aboutContainer');
+                    const profileContainer = document.getElementById('profileContainer');
+                    const communityContainer = document.getElementById('communityContainer');
+                    const reportBtn = document.getElementById('reportBtn');
+                    const settingsBtn = document.getElementById('settingsBtn');
+                    const settingsModal = document.getElementById('settingsModal');
+                    const closeSettings = document.getElementById('closeSettings');
+                    const themeSelect = document.getElementById('themeSelect');
+                    const clearChatBtn = document.getElementById('clearChatBtn');
+                    const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+                    const reportAlert = document.getElementById('reportAlert');
+                    const reportMessage = document.getElementById('reportMessage');
+                    const dismissReport = document.getElementById('dismissReport');
+                    const personOfWeekSpan = document.getElementById('potwName');
+
+                    // ------ Profile DOM ------
+                    const profilePicDisplay = document.getElementById('profilePicDisplay');
+                    const uploadPicBtn = document.getElementById('uploadPicBtn');
+                    const picFileInput = document.getElementById('picFileInput');
+                    const profileUsername = document.getElementById('profileUsername');
+                    const profileNickname = document.getElementById('profileNickname');
+                    const profileBio = document.getElementById('profileBio');
+                    const profileVotes = document.getElementById('profileVotes');
+                    const saveProfileBtn = document.getElementById('saveProfileBtn');
+
+                    // ------ Browser (same as before) ------
+                    const browserTabs = document.getElementById('browserTabs');
+                    const browserUrl = document.getElementById('browserUrl');
+                    const browserGo = document.getElementById('browserGo');
+                    const browserIframe = document.getElementById('browserIframe');
+                    const browserFavStar = document.getElementById('browserFavStar');
+                    const browserFavoritesDiv = document.getElementById('browserFavorites');
+
+                    let tabs = [];
+                    let activeTabId = null;
+                    let tabIdCounter = 0;
+                    function loadFavorites() { try { return JSON.parse(localStorage.getItem('nexus_favorites')) || []; } catch { return []; } }
+                    function saveFavorites(favs) { localStorage.setItem('nexus_favorites', JSON.stringify(favs)); }
+                    function renderFavorites() {
+                        const favs = loadFavorites();
+                        browserFavoritesDiv.innerHTML = '';
+                        favs.forEach(f => {
+                            const span = document.createElement('span');
+                            span.className = 'fav-item';
+                            span.textContent = f.title || f.url;
+                            span.title = f.url;
+                            span.addEventListener('click', function() { navigateTo(f.url); });
+                            browserFavoritesDiv.appendChild(span);
+                        });
+                    }
+                    function addFavorite(url, title) {
+                        const favs = loadFavorites();
+                        if (!favs.find(f => f.url === url)) { favs.push({ url, title: title || url }); saveFavorites(favs); renderFavorites(); }
+                    }
+                    function navigateTo(url) {
+                        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                            if (url.includes(' ') || !url.includes('.')) url = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+                            else url = 'https://' + url;
+                        }
+                        browserIframe.src = url;
+                        browserUrl.value = url;
+                        const activeTab = tabs.find(t => t.id === activeTabId);
+                        if (activeTab) { activeTab.title = url; updateTabUI(); }
+                    }
+                    function createTab(url) {
+                        const id = ++tabIdCounter;
+                        const tab = { id, title: url || 'New Tab', url: url || 'about:blank' };
+                        tabs.push(tab);
+                        activeTabId = id;
+                        navigateTo(tab.url);
+                        updateTabUI();
+                        renderTabs();
+                        return id;
+                    }
+                    function closeTab(id) {
+                        if (tabs.length <= 1) {
+                            const tab = tabs.find(t => t.id === id);
+                            if (tab) { tab.url = 'about:blank'; tab.title = 'New Tab'; if (activeTabId === id) navigateTo('about:blank'); updateTabUI(); renderTabs(); }
+                            return;
+                        }
+                        const idx = tabs.findIndex(t => t.id === id);
+                        if (idx === -1) return;
+                        tabs.splice(idx, 1);
+                        if (activeTabId === id) { activeTabId = tabs.length > 0 ? tabs[0].id : null; if (activeTabId) { const newTab = tabs.find(t => t.id === activeTabId); if (newTab) navigateTo(newTab.url); } }
+                        updateTabUI(); renderTabs();
+                    }
+                    function switchTab(id) { activeTabId = id; const tab = tabs.find(t => t.id === id); if (tab) navigateTo(tab.url); updateTabUI(); renderTabs(); }
+                    function updateTabUI() { const activeTab = tabs.find(t => t.id === activeTabId); if (activeTab) browserUrl.value = activeTab.url; }
+                    function renderTabs() {
+                        const addBtn = browserTabs.querySelector('.browser-add-tab');
+                        browserTabs.innerHTML = '';
+                        tabs.forEach(tab => {
+                            const div = document.createElement('div');
+                            div.className = 'browser-tab' + (tab.id === activeTabId ? ' active' : '');
+                            div.innerHTML = \`<span class="tab-title">\${tab.title}</span><button class="tab-close" data-id="\${tab.id}">✕</button>\`;
+                            div.addEventListener('click', function(e) { if (e.target.closest('.tab-close')) return; switchTab(tab.id); });
+                            const closeBtn = div.querySelector('.tab-close');
+                            closeBtn.addEventListener('click', function(e) { e.stopPropagation(); closeTab(tab.id); });
+                            browserTabs.appendChild(div);
+                        });
+                        browserTabs.appendChild(addBtn);
+                    }
+                    createTab('https://www.google.com/webhp?igu=1');
+                    browserGo.addEventListener('click', function() { const val = browserUrl.value.trim(); if (val) navigateTo(val); });
+                    browserUrl.addEventListener('keydown', function(e) { if (e.key === 'Enter') browserGo.click(); });
+                    document.getElementById('addBrowserTab').addEventListener('click', function() { createTab('about:blank'); });
+                    browserFavStar.addEventListener('click', function() {
+                        const activeTab = tabs.find(t => t.id === activeTabId);
+                        if (activeTab && activeTab.url && activeTab.url !== 'about:blank') addFavorite(activeTab.url, activeTab.title);
+                    });
+                    renderFavorites();
+
+                    // ------ User & Profile System ------
+                    let currentUser = null; // username string
+                    let users = {};
+
+                    function loadUsers() {
+                        try { users = JSON.parse(localStorage.getItem('nexus_users')) || {}; } catch { users = {}; }
+                    }
+                    function saveUsers() { localStorage.setItem('nexus_users', JSON.stringify(users)); }
+                    function getCurrentUser() { return localStorage.getItem('nexus_current_user') || null; }
+                    function setCurrentUser(username) { if (username) localStorage.setItem('nexus_current_user', username); else localStorage.removeItem('nexus_current_user'); }
+
+                    // Initialize user if not exist
+                    function initUser() {
+                        loadUsers();
+                        let cur = getCurrentUser();
+                        if (!cur || !users[cur]) {
+                            // Create a new user with default values
+                            const base = 'User' + Math.floor(Math.random() * 10000);
+                            const name = base;
+                            users[name] = {
+                                username: name,
+                                nickname: name,
+                                bio: 'Welcome to Nexus Arcade!',
+                                profilePic: '', // base64 or empty
+                                favorites: [],
+                                weeklyVotes: 0,
+                                votedOn: {} // username: 'up' or 'down' to prevent double voting
+                            };
+                            saveUsers();
+                            setCurrentUser(name);
+                            cur = name;
+                        }
+                        currentUser = cur;
+                        return cur;
+                    }
+
+                    // Reset weekly votes and determine person of week
+                    function checkWeeklyReset() {
+                        const now = new Date();
+                        // Get current time in Eastern Time (ET)
+                        const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+                        // Get last reset timestamp from localStorage
+                        let lastReset = localStorage.getItem('nexus_last_reset');
+                        if (!lastReset) {
+                            // Set to last Monday 00:00 ET
+                            const d = new Date(et);
+                            d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1)); // move to Monday
+                            d.setHours(0,0,0,0);
+                            lastReset = d.getTime();
+                            localStorage.setItem('nexus_last_reset', lastReset);
+                        }
+                        const lastResetDate = new Date(parseInt(lastReset));
+                        // If current ET is past next Monday 00:00, reset
+                        const nextMonday = new Date(lastResetDate);
+                        nextMonday.setDate(nextMonday.getDate() + 7);
+                        if (et >= nextMonday) {
+                            // Determine winner from users
+                            loadUsers();
+                            let maxVotes = -Infinity;
+                            let winner = null;
+                            for (const u in users) {
+                                if (users[u].weeklyVotes > maxVotes) {
+                                    maxVotes = users[u].weeklyVotes;
+                                    winner = u;
+                                }
+                            }
+                            // Store winner nickname
+                            if (winner) {
+                                const winnerNick = users[winner].nickname || winner;
+                                localStorage.setItem('nexus_potw', winnerNick);
+                            } else {
+                                localStorage.removeItem('nexus_potw');
+                            }
+                            // Reset all weeklyVotes to 0
+                            for (const u in users) {
+                                users[u].weeklyVotes = 0;
+                                users[u].votedOn = {};
+                            }
+                            saveUsers();
+                            // Update last reset to this Monday 00:00 ET
+                            const newReset = new Date(et);
+                            newReset.setDate(et.getDate() - (et.getDay() === 0 ? 6 : et.getDay() - 1));
+                            newReset.setHours(0,0,0,0);
+                            localStorage.setItem('nexus_last_reset', newReset.getTime());
+                            // Update person of week display
+                            updatePersonOfWeek();
+                        }
+                    }
+
+                    function updatePersonOfWeek() {
+                        const name = localStorage.getItem('nexus_potw') || 'None';
+                        personOfWeekSpan.textContent = name;
+                    }
+
+                    // ------ Load profile data into UI ------
+                    function loadProfile() {
+                        const username = getCurrentUser();
+                        if (!username) return;
+                        loadUsers();
+                        const user = users[username];
+                        if (!user) return;
+                        profileUsername.value = user.username || '';
+                        profileNickname.value = user.nickname || '';
+                        profileBio.value = user.bio || '';
+                        if (user.profilePic) {
+                            profilePicDisplay.src = user.profilePic;
+                        } else {
+                            profilePicDisplay.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Ccircle cx="40" cy="40" r="40" fill="%23444"%3E%3C/circle%3E%3Ctext x="40" y="50" text-anchor="middle" fill="%23aaa" font-size="30" font-family="Arial"%3E👤%3C/text%3E%3C/svg%3E';
+                        }
+                        profileVotes.textContent = user.weeklyVotes || 0;
+                    }
+
+                    // ------ Save profile ------
+                    function saveProfile() {
+                        const username = getCurrentUser();
+                        if (!username) return;
+                        const newUsername = profileUsername.value.trim();
+                        if (!newUsername) { alert('Username cannot be empty.'); return; }
+                        loadUsers();
+                        // Check if new username is taken (by someone else)
+                        if (newUsername !== username && users[newUsername]) {
+                            alert('Username already taken. Choose another.');
+                            return;
+                        }
+                        // Update users object
+                        const userData = users[username];
+                        // If username changed, move data
+                        if (newUsername !== username) {
+                            users[newUsername] = { ...userData };
+                            delete users[username];
+                            // Update current user
+                            setCurrentUser(newUsername);
+                        }
+                        const current = users[newUsername];
+                        current.nickname = profileNickname.value.trim() || newUsername;
+                        current.bio = profileBio.value.trim() || '';
+                        // profilePic is already set via upload
+                        saveUsers();
+                        currentUser = newUsername;
+                        loadProfile(); // refresh display
+                        // Also update community list
+                        renderCommunity();
+                    }
+
+                    // ------ Upload profile picture ------
+                    uploadPicBtn.addEventListener('click', function() { picFileInput.click(); });
+                    picFileInput.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            const dataUrl = ev.target.result;
+                            profilePicDisplay.src = dataUrl;
+                            // Save to user
+                            const username = getCurrentUser();
+                            if (username) {
+                                loadUsers();
+                                if (users[username]) {
+                                    users[username].profilePic = dataUrl;
+                                    saveUsers();
+                                }
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    });
+
+                    // ------ Render Community ------
+                    function renderCommunity() {
+                        loadUsers();
+                        const current = getCurrentUser();
+                        communityContainer.innerHTML = '';
+                        for (const u in users) {
+                            if (u === current) continue; // skip self
+                            const user = users[u];
+                            const div = document.createElement('div');
+                            div.className = 'user-card';
+                            const avatar = user.profilePic ? `<img class="avatar" src="${user.profilePic}" alt="avatar">` : `<div class="avatar" style="background:var(--bg-primary);border:2px solid var(--border-color);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>`;
+                            div.innerHTML = \`
+                                <div class="user-info">
+                                    \${avatar}
+                                    <div>
+                                        <div class="name">\${user.nickname || u}</div>
+                                        <div class="nick">@\${u}</div>
+                                    </div>
+                                </div>
+                                <div class="votes">
+                                    <button class="up" data-target="\${u}" data-action="up">👍</button>
+                                    <span class="score" id="score-\${u}">\${user.weeklyVotes || 0}</span>
+                                    <button class="down" data-target="\${u}" data-action="down">👎</button>
+                                </div>
+                            \`;
+                            communityContainer.appendChild(div);
+                        }
+                        // Add vote listeners
+                        communityContainer.querySelectorAll('.up, .down').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const target = this.getAttribute('data-target');
+                                const action = this.getAttribute('data-action');
+                                voteUser(target, action);
+                            });
+                        });
+                    }
+
+                    // ------ Vote on a user ------
+                    function voteUser(target, action) {
+                        const voter = getCurrentUser();
+                        if (!voter) return;
+                        loadUsers();
+                        if (!users[target]) return;
+                        // Prevent voting on self
+                        if (target === voter) { alert('You cannot vote on yourself.'); return; }
+                        // Check if already voted
+                        const voterData = users[voter];
+                        if (voterData.votedOn && voterData.votedOn[target]) {
+                            const prev = voterData.votedOn[target];
+                            // If same action, ignore
+                            if (prev === action) { alert('You already gave a ' + action + ' vote to this user.'); return; }
+                            // Otherwise, reverse previous vote
+                            if (prev === 'up') users[target].weeklyVotes--;
+                            else if (prev === 'down') users[target].weeklyVotes++;
+                            // Remove previous vote
+                            delete voterData.votedOn[target];
+                        }
+                        // Apply new vote
+                        if (action === 'up') users[target].weeklyVotes++;
+                        else if (action === 'down') users[target].weeklyVotes--;
+                        // Record vote
+                        voterData.votedOn[target] = action;
+                        saveUsers();
+                        // Update UI
+                        renderCommunity();
+                        // Update profile votes if viewing self
+                        if (target === getCurrentUser()) {
+                            loadProfile();
+                        }
+                    }
+
+                    // ------ Favorite system ------
+                    function toggleFavorite(gameName) {
+                        const username = getCurrentUser();
+                        if (!username) return;
+                        loadUsers();
+                        const user = users[username];
+                        if (!user) return;
+                        const idx = user.favorites.indexOf(gameName);
+                        if (idx > -1) {
+                            user.favorites.splice(idx, 1);
+                        } else {
+                            user.favorites.push(gameName);
+                        }
+                        saveUsers();
+                        updateFavoriteButtons();
+                        // If on favorites tab, re-filter
+                        if (currentTab === 'favorites') filterCards();
+                    }
+
+                    function updateFavoriteButtons() {
+                        const username = getCurrentUser();
+                        if (!username) return;
+                        loadUsers();
+                        const user = users[username];
+                        if (!user) return;
+                        const favs = user.favorites || [];
+                        document.querySelectorAll('.fav-btn').forEach(btn => {
+                            const game = btn.getAttribute('data-game');
+                            if (favs.includes(game)) {
+                                btn.classList.add('active');
+                                btn.textContent = '★';
+                            } else {
+                                btn.classList.remove('active');
+                                btn.textContent = '☆';
+                            }
+                        });
+                    }
+
+                    // ------ Filter logic (updated with favorites) ------
+                    let currentTab = 'all';
+                    let currentTag = 'all';
+                    let searchQuery = '';
+
+                    function filterCards() {
+                        const cards = grid.querySelectorAll('.game-card');
+                        const username = getCurrentUser();
+                        let favs = [];
+                        if (username) {
+                            loadUsers();
+                            if (users[username]) favs = users[username].favorites || [];
+                        }
+                        cards.forEach(card => {
+                            const name = card.getAttribute('data-name') || '';
+                            const tag = card.getAttribute('data-tag') || '';
+                            const game = card.getAttribute('data-game') || '';
+                            let showByTab = true;
+                            if (currentTab === 'games') {
+                                const gameTags = ['shooter','adventure','arcade','strategy','sports'];
+                                if (!gameTags.includes(tag)) showByTab = false;
+                            } else if (currentTab === 'social') {
+                                if (!['social','music'].includes(tag)) showByTab = false;
+                            } else if (currentTab === 'editing') {
+                                if (tag !== 'editing') showByTab = false;
+                            } else if (currentTab === 'school') {
+                                if (tag !== 'school') showByTab = false;
+                            } else if (currentTab === 'favorites') {
+                                if (!favs.includes(game)) showByTab = false;
+                            }
+                            let showByTag = true;
+                            if (currentTag !== 'all' && tag !== currentTag) showByTag = false;
+                            let showBySearch = true;
+                            if (searchQuery) {
+                                const q = searchQuery.toLowerCase();
+                                if (!name.includes(q)) showBySearch = false;
+                            }
+                            card.style.display = (showByTab && showByTag && showBySearch) ? '' : 'none';
+                        });
+                    }
+
+                    // ------ Tab switching (updated) ------
+                    tabBtns.forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            tabBtns.forEach(b => b.classList.remove('active'));
+                            this.classList.add('active');
+                            const tab = this.getAttribute('data-tab');
+                            currentTab = tab;
+                            chatContainer.style.display = 'none';
+                            gameGridContainer.style.display = 'none';
+                            browserContainer.style.display = 'none';
+                            aboutContainer.style.display = 'none';
+                            profileContainer.style.display = 'none';
+                            communityContainer.style.display = 'none';
+                            if (tab === 'chat') chatContainer.style.display = 'flex';
+                            else if (tab === 'browser') browserContainer.style.display = 'flex';
+                            else if (tab === 'about') { aboutContainer.style.display = 'flex'; updatePersonOfWeek(); }
+                            else if (tab === 'profile') { profileContainer.style.display = 'flex'; loadProfile(); }
+                            else if (tab === 'community') { communityContainer.style.display = 'flex'; renderCommunity(); }
+                            else { gameGridContainer.style.display = 'block'; filterCards(); }
+                            if (tab !== 'chat' && tab !== 'browser' && tab !== 'about' && tab !== 'profile' && tab !== 'community') filterCards();
+                            // Always update favorites when switching
+                            updateFavoriteButtons();
+                        });
+                    });
+
+                    // ------ Tag filter ------
+                    const tagButtons = tagFilter.querySelectorAll('.tag-filter-btn');
+                    tagButtons.forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            tagButtons.forEach(b => b.classList.remove('active'));
+                            this.classList.add('active');
+                            currentTag = this.getAttribute('data-tag');
+                            if (currentTab !== 'chat' && currentTab !== 'browser' && currentTab !== 'about' && currentTab !== 'profile' && currentTab !== 'community')
+                                filterCards();
+                        });
+                    });
+
+                    // ------ Search ------
+                    searchInput.addEventListener('input', function() {
+                        searchQuery = this.value.trim();
+                        if (currentTab !== 'chat' && currentTab !== 'browser' && currentTab !== 'about' && currentTab !== 'profile' && currentTab !== 'community')
+                            filterCards();
+                    });
+
+                    // ------ Privacy overlay ------
+                    const overlay = document.getElementById('privacyOverlay');
+                    document.addEventListener('visibilitychange', function() {
+                        if (document.hidden) overlay.classList.add('active');
+                        else overlay.classList.remove('active');
+                    });
+                    document.addEventListener('mouseleave', function() { overlay.classList.add('active'); });
+                    document.addEventListener('mouseenter', function() { overlay.classList.remove('active'); });
+                    document.addEventListener('click', function() { overlay.classList.remove('active'); });
+                    document.addEventListener('keydown', function() { overlay.classList.remove('active'); });
+
+                    // ------ Chat (same as before) ------
+                    (function initChat() {
+                        const channel = new BroadcastChannel('nexus_chat');
+                        const messagesDiv = document.getElementById('chatMessages');
+                        const input = document.getElementById('chatInput');
+                        const sendBtn = document.getElementById('chatSend');
+                        const userCountSpan = document.getElementById('userCount');
+                        const adjectives = ['Swift','Silent','Shadow','Neon','Cyber','Pixel','Nova','Echo','Void','Apex'];
+                        const nouns = ['Fox','Wolf','Hawk','Tiger','Shark','Phoenix','Dragon','Raven','Lynx','Viper'];
+                        const username = adjectives[Math.floor(Math.random()*adjectives.length)] +
+                                          nouns[Math.floor(Math.random()*nouns.length)] +
+                                          Math.floor(Math.random()*100);
+                        function loadHistory() {
+                            const stored = localStorage.getItem('nexus_chat_history');
+                            if (stored) { try { JSON.parse(stored).forEach(m => appendMessage(m.user, m.text, m.time, false)); } catch(e) {} }
+                        }
+                        function appendMessage(user, text, time, save = true) {
+                            const div = document.createElement('div');
+                            div.className = 'msg';
+                            const timeStr = time || new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                            div.innerHTML = \`<span class="user">\${user}</span><span class="time">\${timeStr}</span><br>\${text}\`;
+                            messagesDiv.appendChild(div);
+                            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                            if (save) {
+                                const stored = localStorage.getItem('nexus_chat_history');
+                                let history = stored ? JSON.parse(stored) : [];
+                                history.push({ user, text, time: timeStr });
+                                if (history.length > 200) history = history.slice(-200);
+                                localStorage.setItem('nexus_chat_history', JSON.stringify(history));
+                            }
+                        }
+                        function sendMessage(text) {
+                            if (!text.trim()) return;
+                            const msg = { type: 'message', user: username, text: text.trim(), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) };
+                            channel.postMessage(msg);
+                            appendMessage(msg.user, msg.text, msg.time);
+                        }
+                        channel.onmessage = function(e) {
+                            const data = e.data;
+                            if (data.type === 'message') appendMessage(data.user, data.text, data.time);
+                            else if (data.type === 'ping') channel.postMessage({ type: 'pong', from: username });
+                            else if (data.type === 'pong') { activeUsers.add(data.from); updateUserCount(); }
+                            else if (data.type === 'report') showReport(data.text);
+                        };
+                        sendBtn.addEventListener('click', () => { sendMessage(input.value); input.value = ''; });
+                        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { sendMessage(input.value); input.value = ''; } });
+                        loadHistory();
+                        let activeUsers = new Set([username]);
+                        function updateUserCount() { userCountSpan.textContent = \`👤 \${activeUsers.size} online\`; }
+                        setInterval(() => { channel.postMessage({ type: 'ping', from: username }); }, 10000);
+                        setInterval(() => { if (activeUsers.size > 50) { activeUsers = new Set([username]); updateUserCount(); } }, 30000);
+                        setTimeout(() => {
+                            channel.postMessage({ type: 'message', user: '🟢 System', text: \`\${username} joined the chat\`, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+                        }, 500);
+                        updateUserCount();
+                        window.__chatChannel = channel;
+                        window.__appendMessage = appendMessage;
+                    })();
+
+                    // ------ Report System (same) ------
+                    function showReport(text) {
+                        reportMessage.textContent = text;
+                        reportAlert.classList.add('active');
+                        if (window.__appendMessage) {
+                            window.__appendMessage('🚨 ALERT', text, new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), true);
+                        }
+                    }
+                    window.showReport = showReport;
+                    dismissReport.addEventListener('click', function() { reportAlert.classList.remove('active'); });
+                    const safeWords = ['Teacher nearby', 'Principal coming', 'Hide', 'Clear browser', 'Emergency', 'Lock screen'];
+                    reportBtn.addEventListener('click', function() {
+                        let msg = 'Select emergency alert:\\n';
+                        safeWords.forEach((w, i) => { msg += \`\${i+1}. \${w}\\n\`; });
+                        msg += 'Enter number (1-6):';
+                        const choice = prompt(msg);
+                        if (choice === null) return;
+                        const idx = parseInt(choice) - 1;
+                        if (idx >= 0 && idx < safeWords.length) {
+                            const selected = safeWords[idx];
+                            if (window.__chatChannel) window.__chatChannel.postMessage({ type: 'report', text: selected });
+                            showReport(selected);
+                            if (window.__appendMessage) window.__appendMessage('🚨 ALERT', \`\${selected} (sent by someone)\`, new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), true);
+                        } else alert('Invalid choice.');
+                    });
+
+                    // ------ Settings Modal (same) ------
+                    settingsBtn.addEventListener('click', function() { settingsModal.classList.add('active'); });
+                    closeSettings.addEventListener('click', function() { settingsModal.classList.remove('active'); });
+                    settingsModal.addEventListener('click', function(e) { if (e.target === this) settingsModal.classList.remove('active'); });
+                    const savedTheme = localStorage.getItem('nexus_theme') || 'dark';
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                    themeSelect.value = savedTheme;
+                    themeSelect.addEventListener('change', function() {
+                        const theme = this.value;
+                        document.documentElement.setAttribute('data-theme', theme);
+                        localStorage.setItem('nexus_theme', theme);
+                    });
+                    clearChatBtn.addEventListener('click', function() {
+                        if (confirm('Clear all chat history?')) {
+                            localStorage.removeItem('nexus_chat_history');
+                            document.getElementById('chatMessages').innerHTML = '';
+                            if (window.__appendMessage) window.__appendMessage('🟢 System', 'Chat history cleared.', new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), true);
+                        }
+                    });
+                    resetSettingsBtn.addEventListener('click', function() {
+                        if (confirm('Reset all settings to default?')) {
+                            localStorage.removeItem('nexus_theme');
+                            document.documentElement.setAttribute('data-theme', 'dark');
+                            themeSelect.value = 'dark';
+                        }
+                    });
+
+                    // ------ Favorite button listeners (delegated) ------
+                    grid.addEventListener('click', function(e) {
+                        const favBtn = e.target.closest('.fav-btn');
+                        if (favBtn) {
+                            e.stopPropagation();
+                            const game = favBtn.getAttribute('data-game');
+                            if (game) toggleFavorite(game);
+                            return;
+                        }
+                        const playBtn = e.target.closest('.play-btn');
+                        if (!playBtn) return;
+                        const encOrUrl = playBtn.getAttribute('data-url');
+                        const isDirect = playBtn.getAttribute('data-direct') === 'true';
+                        const name = playBtn.getAttribute('data-name');
+                        let finalUrl;
+                        if (isDirect) finalUrl = encOrUrl;
+                        else finalUrl = atob(encOrUrl).split('').reverse().join('');
+                        const gameTab = window.open('about:blank', '_blank');
+                        if (!gameTab) { alert('Popup blocked! Please allow popups.'); return; }
+                        const gameHTML = \`
+                        <!DOCTYPE html>
+                        <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>\${name}</title>
+                        <style>*{margin:0;padding:0;}body{background:#0d0d1a;display:flex;flex-direction:column;height:100vh;}.controls{display:flex;justify-content:center;align-items:center;gap:20px;height:60px;background:#141428;border-bottom:1px solid #2a2a5a;padding:0 20px;flex-shrink:0;}.controls button{padding:8px 24px;border:none;border-radius:20px;background:#ff6b9d;color:#000;font-weight:bold;font-size:14px;cursor:pointer;transition:0.2s;}.controls button:hover{background:#ff8ab0;}.controls .close-btn{background:#3a3a5a;color:#eee;}.controls .close-btn:hover{background:#5a5a8a;}iframe{width:100%;flex:1;border:none;background:#fff;}</style>
+                        </head>
+                        <body>
+                            <div class="controls"><button id="fullscreenBtn">⛶ Fullscreen</button><button id="closeBtn" class="close-btn">✕ Close</button></div>
+                            <iframe id="gameIframe" src="\${finalUrl}" allowfullscreen></iframe>
+                            <script>
+                                document.getElementById('fullscreenBtn').addEventListener('click',function(){
+                                    const iframe=document.getElementById('gameIframe');
+                                    if(iframe.requestFullscreen) iframe.requestFullscreen();
+                                    else if(iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+                                    else if(iframe.msRequestFullscreen) iframe.msRequestFullscreen();
+                                });
+                                document.getElementById('closeBtn').addEventListener('click',function(){window.close();});
+                                document.addEventListener('keydown', function(e) {
+                                    if (e.shiftKey && e.key === 'Backspace') { e.preventDefault(); window.close(); }
+                                });
+                            <\/script>
+                        </body>
+                        </html>
+                        \`;
+                        gameTab.document.write(gameHTML);
+                        gameTab.document.close();
+                    });
+
+                    // ------ Save profile button ------
+                    saveProfileBtn.addEventListener('click', saveProfile);
+
+                    // ------ Initialization ------
+                    initUser();
+                    checkWeeklyReset();
+                    updatePersonOfWeek();
+                    loadProfile();
+                    updateFavoriteButtons();
+                    filterCards();
+                    renderCommunity();
+                    // Default tab: All
+                    document.querySelector('[data-tab="all"]').click();
+                })();
+                </script>
+            </body>
+            </html>
+            `;
+        }
+    })();
+    </script>
+</body>
+</html>
