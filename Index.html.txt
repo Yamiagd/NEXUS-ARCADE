@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS ARCADE</title>
+    <style>
+        :root {
+            --bg-primary: #0d0d1a;
+            --bg-secondary: #141428;
+            --bg-card: #1a1a32;
+            --bg-input: #0d0d22;
+            --bg-btn: #1e1e3a;
+            --border-color: #2a2a5a;
+            --text-primary: #ffffff;
+            --text-secondary: #c8c8e8;
+            --text-muted: #888888;
+            --accent: #ff6b9d;
+            --accent-hover: #ff8ab0;
+            --shadow: 0 8px 32px rgba(0,0,0,0.8);
+            --iframe-bg: #ffffff;
+            --msg-bg: #1e1e3e;
+            --lock-bg: #141428;
+        }
+        [data-theme="light"] {
+            --bg-primary: #f0f0f5;
+            --bg-secondary: #ffffff;
+            --bg-card: #e8e8f0;
+            --bg-input: #ffffff;
+            --bg-btn: #d0d0e0;
+            --border-color: #c0c0d0;
+            --text-primary: #1a1a2e;
+            --text-secondary: #333355;
+            --text-muted: #666688;
+            --accent: #e94560;
+            --accent-hover: #ff6b8a;
+            --shadow: 0 8px 32px rgba(0,0,0,0.15);
+            --iframe-bg: #ffffff;
+            --msg-bg: #d8d8e8;
+            --lock-bg: #ffffff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-primary); color: var(--text-primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; transition: background 0.3s, color 0.3s; overflow: hidden; }
+
+        /* -------- LOADING SCREEN -------- */
+        #loadingScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        #loadingScreen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        #loadingScreen .glitch-title {
+            font-size: 72px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(255,107,157,0.6), 0 0 60px rgba(255,107,157,0.3), 0 0 100px rgba(255,107,157,0.1);
+            animation: glitch 2s infinite;
+            font-family: 'Arial Black', 'Segoe UI', sans-serif;
+        }
+        @keyframes glitch {
+            0% { transform: skew(0deg, 0deg); opacity: 1; }
+            5% { transform: skew(2deg, -1deg); opacity: 0.9; text-shadow: 3px 0 red, -3px 0 cyan; }
+            10% { transform: skew(0deg, 0deg); opacity: 1; text-shadow: 0 0 20px rgba(255,107,157,0.6); }
+            15% { transform: skew(-2deg, 1deg); opacity: 0.95; text-shadow: -3px 0 cyan, 3px 0 red; }
+            20% { transform: skew(0deg, 0deg); opacity: 1; text-shadow: 0 0 20px rgba(255,107,157,0.6); }
+            100% { transform: skew(0deg, 0deg); opacity: 1; }
+        }
+        #loadingScreen .sub-title {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+        #loadingScreen .loader {
+            margin-top: 40px;
+            width: 200px;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        #loadingScreen .loader::after {
+            content: '';
+            position: absolute;
+            left: -100%;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            animation: loadBar 1.8s ease-in-out infinite;
+        }
+        @keyframes loadBar {
+            0% { left: -100%; width: 30%; }
+            50% { left: 50%; width: 40%; }
+            100% { left: 120%; width: 20%; }
+        }
+        #loadingScreen .credits {
+            position: fixed;
+            bottom: 20px;
+            left: 24px;
+            font-size: 13px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            font-weight: 300;
+            opacity: 0.7;
+        }
+        #loadingScreen .credits span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        #loadingScreen .loading-percent {
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        /* -------- REST OF APP -------- */
+        .container { max-width: 1200px; width: 100%; background: var(--bg-secondary); border-radius: 24px; padding: 20px; box-shadow: var(--shadow); display: none; flex-direction: column; gap: 18px; transition: background 0.3s, box-shadow 0.3s; }
+        .auth-screen { max-width: 440px; width: 100%; background: var(--lock-bg); border-radius: 24px; padding: 40px 30px; box-shadow: var(--shadow); text-align: center; transition: background 0.3s; display: none; }
+        .auth-screen h2 { color: var(--accent); font-size: 26px; margin-bottom: 6px; }
+        .auth-screen .sub { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; }
+        .auth-screen input, .auth-screen select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); font-size: 14px; outline: none; margin-bottom: 12px; transition: 0.3s; }
+        .auth-screen input:focus, .auth-screen select:focus { border-color: var(--accent); }
+        .auth-screen select option { background: var(--bg-secondary); color: var(--text-primary); }
+        .auth-screen button { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--accent); color: #000; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .auth-screen button:hover { background: var(--accent-hover); }
+        .auth-screen .error { color: #ff4444; font-size: 13px; margin-top: 8px; display: none; }
+        .auth-screen .switch-link { color: var(--accent); cursor: pointer; font-size: 14px; margin-top: 14px; display: inline-block; }
+        .auth-screen .switch-link:hover { text-decoration: underline; }
+        .auth-screen .divider { border-top: 1px solid var(--border-color); margin: 18px 0 14px; }
+        .auth-screen .provider-badge { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+        .header-row h1 { color: var(--accent); font-size: 28px; }
+        .header-row .user-badge { font-size: 13px; color: var(--text-secondary); background: var(--bg-card); padding: 4px 14px; border-radius: 20px; border: 1px solid var(--border-color); }
+        .settings-btn { background: none; border: none; color: var(--text-muted); font-size: 28px; cursor: pointer; padding: 0 8px; transition: 0.3s; }
+        .settings-btn:hover { color: var(--accent); transform: rotate(60deg); }
+        .settings-panel { background: var(--bg-card); border-radius: 16px; padding: 16px 20px; border: 1px solid var(--border-color); display: none; flex-wrap: wrap; align-items: center; gap: 20px; transition: 0.3s; }
+        .settings-panel.open { display: flex; }
+        .settings-panel label { font-weight: 600; color: var(--text-secondary); font-size: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .settings-panel select { padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); outline: none; font-size: 14px; }
+        .settings-panel select:focus { border-color: var(--accent); }
+        .settings-panel .close-settings { margin-left: auto; background: var(--bg-btn); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 10px; padding: 6px 16px; cursor: pointer; font-size: 13px; transition: 0.3s; }
+        .settings-panel .close-settings:hover { color: var(--text-primary); border-color: var(--accent); }
+        .main-layout { display: flex; flex-wrap: wrap; gap: 18px; }
+        .left { flex: 3; min-width: 300px; }
+        .right { flex: 1.2; min-width: 220px; background: var(--bg-card); border-radius: 16px; padding: 14px; border: 1px solid var(--border-color); display: flex; flex-direction: column; max-height: 700px; transition: background 0.3s, border 0.3s; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .btn { background: var(--bg-btn); border: 2px solid var(--border-color); border-radius: 14px; padding: 10px 4px 8px; cursor: pointer; text-align: center; transition: 0.2s; }
+        .btn:hover { transform: scale(1.05); border-color: var(--accent); background: var(--bg-card); }
+        .btn .logo { font-size: 36px; line-height: 1; }
+        .btn .label { font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-top: 4px; }
+        .frame-wrap { background: var(--bg-primary); border-radius: 14px; overflow: hidden; border: 1px solid var(--border-color); transition: 0.3s; }
+        iframe { width: 100%; height: 500px; border: none; display: block; background: var(--iframe-bg); }
+        .chat-header { font-size: 18px; font-weight: bold; color: var(--accent); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .chat-header span { font-size: 12px; color: var(--text-muted); font-weight: normal; }
+        #chatMessages { flex: 1; overflow-y: auto; background: var(--bg-primary); border-radius: 10px; padding: 10px; margin-bottom: 10px; min-height: 200px; max-height: 400px; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px; transition: background 0.3s; }
+        #chatMessages .msg { background: var(--msg-bg); padding: 5px 10px; border-radius: 8px; word-break: break-word; transition: background 0.3s; }
+        #chatMessages .msg .user { color: var(--accent); font-weight: bold; }
+        #chatMessages .msg .time { color: var(--text-muted); font-size: 10px; margin-left: 8px; }
+        .chat-input-row { display: flex; gap: 8px; }
+        #chatInput { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); outline: none; transition: 0.3s; }
+        #chatInput:focus { border-color: var(--accent); }
+        #chatSend { padding: 10px 18px; border: none; border-radius: 10px; background: var(--accent); color: #000; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        #chatSend:hover { background: var(--accent-hover); }
+        .user-count { font-size: 12px; color: var(--text-muted); }
+        .footer { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+        @media (max-width: 700px) { .right { max-height: 400px; } iframe { height: 300px; } .grid { grid-template-columns: repeat(4, 1fr); } #loadingScreen .glitch-title { font-size: 36px; letter-spacing: 4px; } }
+    </style>
+</head>
+<body>
+
+<!-- ====== LOADING SCREEN ====== -->
+<div id="loadingScreen">
+    <div class="glitch-title">NEXUS ARCADE</div>
+    <div class="sub-title">— beyond the grid —</div>
+    <div class="loader"></div>
+    <div class="loading-percent" id="loadPercent">LOADING 0%</div>
+    <div class="credits">made by <span>Isaac</span></div>
+</div>
+
+<!-- ====== AUTH SCREEN ====== -->
+<div class="auth-screen" id="authScreen">
+    <h2 id="authTitle">🔐 Create Account</h2>
+    <div class="sub" id="authSub">Sign up to access the arcade</div>
+    <input type="email" id="authEmail" placeholder="Email (e.g., user@gmail.com)">
+    <select id="authProvider">
+        <option value="gmail">Gmail</option>
+        <option value="icloud">iCloud</option>
+        <option value="outlook">Outlook</option>
+        <option value="yahoo">Yahoo</option>
+        <option value="other">Other</option>
+    </select>
+    <input type="password" id="authPassword" placeholder="Password (min 4 chars)">
+    <input type="password" id="authConfirm" placeholder="Confirm password" style="display:none;">
+    <button id="authActionBtn">Create Account</button>
+    <div class="error" id="authError">Error</div>
+    <div class="divider"></div>
+    <span class="switch-link" id="authSwitch">Already have an account? Login</span>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">We support Gmail, iCloud, Outlook, Yahoo &amp; more</div>
+</div>
+
+<!-- ====== MAIN CONTENT ====== -->
+<div class="container" id="mainContent">
+    <div class="header-row">
+        <h1>🎮 NEXUS ARCADE</h1>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span class="user-badge" id="userBadge">👤 guest</span>
+            <button class="settings-btn" id="settingsToggle">⚙️</button>
+            <button class="settings-btn" id="logoutBtn" style="font-size:20px;" title="Logout">🚪</button>
+        </div>
+    </div>
+    <div class="settings-panel" id="settingsPanel">
+        <label>🌓 Theme:
+            <select id="themeSelect">
+                <option value="dark">Dark (default)</option>
+                <option value="light">Light</option>
+            </select>
+        </label>
+        <button class="close-settings" id="closeSettings">✕ Close</button>
+    </div>
+    <div class="main-layout">
+        <div class="left">
+            <div class="grid" id="buttonGrid"></div>
+            <div class="frame-wrap">
+                <iframe id="gameFrame" src="about:blank" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="right">
+            <div class="chat-header">
+                💬 Global Chat
+                <span class="user-count" id="userCount">👤 0 online</span>
+            </div>
+            <div id="chatMessages"></div>
+            <div class="chat-input-row">
+                <input type="text" id="chatInput" placeholder="Type message..." autocomplete="off">
+                <button id="chatSend">Send</button>
+            </div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:6px;text-align:center;">messages are public &amp; anonymous</div>
+        </div>
+    </div>
+    <div class="footer">all services via now.gg • chat uses local relay</div>
+</div>
+
+<script>
+    // ============================================================
+    // 1. LOADING SCREEN WITH PROGRESS
+    // ============================================================
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadPercent = document.getElementById('loadPercent');
+    let progress = 0;
+    const loadInterval = setInterval(() => {
+        progress += Math.floor(Math.random() * 8) + 2;
+        if (progress > 100) progress = 100;
+        loadPercent.textContent = 'LOADING ' + progress + '%';
+        if (progress >= 100) {
+            clearInterval(loadInterval);
+            // Fade out loading screen after a moment
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                // Show auth screen or auto-login
+                const user = getCurrentUser();
+                if (user) {
+                    const users = getUsers();
+                    if (users[user]) {
+                        authScreen.style.display = 'none';
+                        mainContent.style.display = 'flex';
+                        updateBadge();
+                        window.autoLoginUser = user;
+                        // Init after DOM ready
+                        setTimeout(() => {
+                            initChatWithUser(user);
+                            if (!window.gamesInitialized) initGamesAndChat();
+                            updateBadge();
+                        }, 200);
+                        return;
+                    } else {
+                        setCurrentUser(null);
+                    }
+                }
+                authScreen.style.display = 'block';
+                mainContent.style.display = 'none';
+                // Default to register mode
+                isLoginMode = false;
+                authTitle.textContent = '🔐 Create Account';
+                authSub.textContent = 'Sign up to access the arcade';
+                authActionBtn.textContent = 'Create Account';
+                authSwitch.textContent = 'Already have an account? Login';
+                authConfirm.style.display = 'block';
+            }, 600);
+        }
+    }, 80);
+
+    // ============================================================
+    // 2. AUTH SYSTEM
+    // ============================================================
+    const authTitle = document.getElementById('authTitle');
+    const authSub = document.getElementById('authSub');
+    const authEmail = document.getElementById('authEmail');
+    const authProvider = document.getElementById('authProvider');
+    const authPassword = document.getElementById('authPassword');
+    const authConfirm = document.getElementById('authConfirm');
+    const authActionBtn = document.getElementById('authActionBtn');
+    const authError = document.getElementById('authError');
+    const authSwitch = document.getElementById('authSwitch');
+    const userBadge = document.getElementById('userBadge');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    let isLoginMode = false;
+
+    function showError(msg) {
+        authError.textContent = msg;
+        authError.style.display = 'block';
+        setTimeout(() => authError.style.display = 'none', 4000);
+    }
+
+    function switchMode() {
+        isLoginMode = !isLoginMode;
+        if (isLoginMode) {
+            authTitle.textContent = '🔑 Login';
+            authSub.textContent = 'Log in to continue';
+            authActionBtn.textContent = 'Login';
+            authSwitch.textContent = "Don't have an account? Create one";
+            authConfirm.style.display = 'none';
+        } else {
+            authTitle.textContent = '🔐 Create Account';
+            authSub.textContent = 'Sign up to access the arcade';
+            authActionBtn.textContent = 'Create Account';
+            authSwitch.textContent = 'Already have an account? Login';
+            authConfirm.style.display = 'block';
+        }
+        authError.style.display = 'none';
+    }
+    authSwitch.addEventListener('click', switchMode);
+
+    function getUsers() {
+        try { return JSON.parse(localStorage.getItem('playhub_users')) || {}; } catch { return {}; }
+    }
+    function saveUsers(users) { localStorage.setItem('playhub_users', JSON.stringify(users)); }
+    function getCurrentUser() { return localStorage.getItem('playhub_current_user') || null; }
+    function setCurrentUser(email) { if (email) localStorage.setItem('playhub_current_user', email); else localStorage.removeItem('playhub_current_user'); }
+
+    function updateBadge() {
+        const user = getCurrentUser();
+        userBadge.textContent = user ? '👤 ' + (user.length > 20 ? user.slice(0,18)+'…' : user) : '👤 guest';
+    }
+
+    function handleAuth() {
+        const email = authEmail.value.trim().toLowerCase();
+        const provider = authProvider.value;
+        const password = authPassword.value.trim();
+        const confirm = authConfirm.value.trim();
+        if (!email || !password) { showError('Please fill in all fields'); return; }
+        if (!email.includes('@') || !email.includes('.')) { showError('Enter a valid email'); return; }
+        if (password.length < 4) { showError('Password min 4 chars'); return; }
+        const users = getUsers();
+        if (isLoginMode) {
+            if (!users[email]) { showError('No account found'); return; }
+            if (users[email].password !== password) { showError('Incorrect password'); return; }
+            setCurrentUser(email);
+            enterApp(email);
+        } else {
+            if (users[email]) { showError('Account exists. Login instead.'); return; }
+            if (password !== confirm) { showError('Passwords do not match'); return; }
+            users[email] = { password, provider, created: new Date().toISOString() };
+            saveUsers(users);
+            setCurrentUser(email);
+            enterApp(email);
+        }
+    }
+    authActionBtn.addEventListener('click', handleAuth);
+    authEmail.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
+    authPassword.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
+    authConfirm.addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
+
+    function enterApp(email) {
+        authScreen.style.display = 'none';
+        mainContent.style.display = 'flex';
+        updateBadge();
+        if (!window.gamesInitialized) initGamesAndChat();
+        if (!window.chatInitialized) initChatWithUser(email);
+        updateBadge();
+    }
+    window.enterApp = enterApp;
+
+    logoutBtn.addEventListener('click', function() {
+        setCurrentUser(null);
+        mainContent.style.display = 'none';
+        authScreen.style.display = 'block';
+        authEmail.value = '';
+        authPassword.value = '';
+        authConfirm.value = '';
+        authError.style.display = 'none';
+        if (isLoginMode) switchMode();
+        location.reload();
+    });
+
+    // ============================================================
+    // 3. THEME
+    // ============================================================
+    const settingsToggle = document.getElementById('settingsToggle');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const closeSettings = document.getElementById('closeSettings');
+    const themeSelect = document.getElementById('themeSelect');
+    const savedTheme = localStorage.getItem('playhub_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeSelect.value = savedTheme;
+    settingsToggle.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+    closeSettings.addEventListener('click', () => settingsPanel.classList.remove('open'));
+    themeSelect.addEventListener('change', function() {
+        document.documentElement.setAttribute('data-theme', this.value);
+        localStorage.setItem('playhub_theme', this.value);
+    });
+
+    // ============================================================
+    // 4. GAME DATA
+    // ============================================================
+    const services = {
+        '1v1.lol': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvMXYxb2wv', logo: '⚔️' },
+        'Roblox': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvcm9ibG94Lw==', logo: '🧱' },
+        'Big Shot Boxing': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvYmlnLXNob3QtYm94aW5nLw==', logo: '🥊' },
+        'YouTube': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkveW91dHViZS8=', logo: '▶️' },
+        'TikTok': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvdGlrdG9rLw==', logo: '🎵' },
+        'Snapchat': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvc25hcGNoYXQv', logo: '👻' },
+        'Discord': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvZGlzY29yZC8=', logo: '💬' },
+        'Spotify': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvc3BvdGlmeS8=', logo: '🎧' },
+        'Twitch': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvdHdpdGNoLw==', logo: '📺' },
+        'CapCut': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvY2FwY3V0Lw==', logo: '✂️' },
+        'Blurrr': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvYmx1cnJyLw==', logo: '🌫️' },
+        'Alight Motion': { url: 'aHR0cHM6Ly93d3cubm93LmdnL3BsYXkvYWxpZ2h0LW1vdGlvbi8=', logo: '🎬' }
+    };
+    function decrypt(enc) { return atob(enc).split('').reverse().join(''); }
+
+    let gamesInitialized = false;
+    function initGamesAndChat() {
+        if (gamesInitialized) return;
+        gamesInitialized = true;
+        window.gamesInitialized = true;
+        const grid = document.getElementById('buttonGrid');
+        const iframe = document.getElementById('gameFrame');
+        Object.keys(services).forEach(name => {
+            const btn = document.createElement('div');
+            btn.className = 'btn';
+            btn.setAttribute('data-url', services[name].url);
+            btn.innerHTML = `<div class="logo">${services[name].logo}</div><div class="label">${name}</div>`;
+            btn.addEventListener('click', function() { iframe.src = decrypt(this.getAttribute('data-url')); });
+            grid.appendChild(btn);
+        });
+        const firstKey = Object.keys(services)[0];
+        iframe.src = decrypt(services[firstKey].url);
+        setInterval(() => {
+            if (iframe.src && iframe.src !== 'about:blank') {
+                const current = iframe.src;
+                iframe.src = 'about:blank';
+                setTimeout(() => { iframe.src = current; }, 100);
+            }
+        }, 50000);
+    }
+
+    // ============================================================
+    // 5. CHAT
+    // ============================================================
+    let chatInitialized = false;
+    let chatChannel = null;
+    let chatUsername = '';
+
+    function initChatWithUser(email) {
+        if (chatInitialized) return;
+        chatInitialized = true;
+        window.chatInitialized = true;
+        const messagesDiv = document.getElementById('chatMessages');
+        const input = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('chatSend');
+        const userCountSpan = document.getElementById('userCount');
+        const base = email.split('@')[0];
+        chatUsername = base + Math.floor(Math.random() * 1000);
+        const channel = new BroadcastChannel('playhub_chat');
+        chatChannel = channel;
+
+        function loadHistory() {
+            const stored = localStorage.getItem('chatHistory');
+            if (stored) { try { JSON.parse(stored).forEach(m => appendMessage(m.user, m.text, m.time, false)); } catch(e) {} }
+        }
+        function appendMessage(user, text, time, save = true) {
+            const div = document.createElement('div');
+            div.className = 'msg';
+            const timeStr = time || new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            div.innerHTML = `<span class="user">${user}</span><span class="time">${timeStr}</span><br>${text}`;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            if (save) {
+                const stored = localStorage.getItem('chatHistory');
+                let history = stored ? JSON.parse(stored) : [];
+                history.push({ user, text, time: timeStr });
+                if (history.length > 200) history = history.slice(-200);
+                localStorage.setItem('chatHistory', JSON.stringify(history));
+            }
+        }
+        function sendMessage(text) {
+            if (!text.trim()) return;
+            const msg = { type: 'message', user: chatUsername, text: text.trim(), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) };
+            channel.postMessage(msg);
+            appendMessage(msg.user, msg.text, msg.time);
+        }
+        channel.onmessage = function(e) {
+            const data = e.data;
+            if (data.type === 'message') appendMessage(data.user, data.text, data.time);
+            else if (data.type === 'ping') channel.postMessage({ type: 'pong', from: chatUsername });
+            else if (data.type === 'pong') { activeUsers.add(data.from); updateUserCount(); }
+        };
+        sendBtn.addEventListener('click', () => { sendMessage(input.value); input.value = ''; });
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { sendMessage(input.value); input.value = ''; } });
+        loadHistory();
+        let activeUsers = new Set([chatUsername]);
+        function updateUserCount() { userCountSpan.textContent = `👤 ${activeUsers.size} online`; }
+        setInterval(() => { channel.postMessage({ type: 'ping', from: chatUsername }); }, 10000);
+        setInterval(() => { if (activeUsers.size > 50) { activeUsers = new Set([chatUsername]); updateUserCount(); } }, 30000);
+        setTimeout(() => { channel.postMessage({ type: 'message', user: '🟢 System', text: `${chatUsername} joined the chat`, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }); }, 500);
+        updateUserCount();
+    }
+
+    // Auto-login check after loading
+    window.addEventListener('load', function() {
+        // If loading already finished and we have a user, init
+        if (!loadingScreen.classList.contains('hidden')) return;
+        const user = getCurrentUser();
+        if (user) {
+            const users = getUsers();
+            if (users[user]) {
+                authScreen.style.display = 'none';
+                mainContent.style.display = 'flex';
+                updateBadge();
+                setTimeout(() => {
+                    initChatWithUser(user);
+                    if (!window.gamesInitialized) initGamesAndChat();
+                    updateBadge();
+                }, 200);
+            }
+        }
+    });
+</script>
+</body>
+</html>
